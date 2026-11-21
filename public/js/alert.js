@@ -1,17 +1,35 @@
+const ALLOWED_ALERT_TYPES = new Set([
+  "primary",
+  "secondary",
+  "success",
+  "danger",
+  "warning",
+  "info",
+  "light",
+  "dark",
+]);
+
 window.Alert = {
-  append(container, message, type) {
+  append(container, message, type = "info") {
     container.replaceChildren();
 
+    const safeType = ALLOWED_ALERT_TYPES.has(type) ? type : "info";
     const wrapper = document.createElement("div");
-    wrapper.innerHTML = `
-      <div class="alert alert-${type} alert-dismissible" role="alert">
-        <div>${message}</div>
-        <button type="button"
-                class="btn-close"
-                data-bs-dismiss="alert"
-                aria-label="Close"></button>
-      </div>
-    `;
+    const alert = document.createElement("div");
+    alert.className = `alert alert-${safeType} alert-dismissible`;
+    alert.setAttribute("role", "alert");
+
+    const body = document.createElement("div");
+    body.textContent = String(message ?? "");
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "btn-close";
+    closeBtn.setAttribute("data-bs-dismiss", "alert");
+    closeBtn.setAttribute("aria-label", "Close");
+
+    alert.append(body, closeBtn);
+    wrapper.append(alert);
     container.append(wrapper);
   },
 

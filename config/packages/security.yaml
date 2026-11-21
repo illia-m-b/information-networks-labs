@@ -28,12 +28,17 @@ security:
             stateless: true
             refresh_jwt:
                 check_path: /api/token/refresh
+        metrics:
+            pattern: ^/metrics$
+            stateless: true
+            jwt: ~
         api:
             pattern: ^/api
             stateless: true
             jwt: ~
 
     access_control:
+        - { path: ^/metrics$, roles: ROLE_ADMIN }
         - { path: ^/api/token, roles: PUBLIC_ACCESS }
         - { path: ^/api/health, roles: PUBLIC_ACCESS }
         - { path: ^/api/openapi\.yaml$, roles: PUBLIC_ACCESS }

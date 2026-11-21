@@ -7,7 +7,10 @@ namespace Twitter\Profile\UI\REST\Controller\CreateProfile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Twitter\IAM\Domain\User\Model\User;
 use Twitter\Profile\Application\UseCase\CreateProfile\CreateProfileCommand;
 use Twitter\Profile\Application\UseCase\CreateProfile\CreateProfileCommandHandler;
 
@@ -16,8 +19,14 @@ final readonly class CreateProfileController
 {
     public function __construct(private CreateProfileCommandHandler $handler) {}
 
-    public function __invoke(#[MapRequestPayload] CreateProfileRequest $request): Response
-    {
+    public function __invoke(
+        #[MapRequestPayload] CreateProfileRequest $request,
+        #[CurrentUser] User $authUser,
+    ): Response {
+        if ($authUser->id() !== $request->userId()) {
+            throw new AccessDeniedHttpException('You are not allowed to create a profile for another user');
+        }
+
         $command = new CreateProfileCommand($request->userId(), $request->name(), $request->bio());
         $this->handler->handle($command);
 

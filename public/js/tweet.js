@@ -54,7 +54,12 @@ function formatPublishDate(isoString) {
 function showTweet(tweet) {
 
   console.log('Tweet JSON data in show:', tweet);
-  document.querySelector('[tweet_author]').innerHTML = '<a href=\"\/p\/' + tweet.author.id + '\"  style=\"color: var(--bs-body-color);\">' + tweet.author.name + '</a>';
+  const authorEl = document.querySelector('[tweet_author]');
+  const authorLink = document.createElement('a');
+  authorLink.href = '/p/' + encodeURIComponent(tweet.author.id);
+  authorLink.style.color = 'var(--bs-body-color)';
+  authorLink.textContent = tweet.author.name;
+  authorEl.replaceChildren(authorLink);
   document.querySelector('[tweet_createdAt]').textContent = ' · ' + formatPublishDate(tweet.createdAt);
   document.querySelector('[data-tweet-content]').textContent = tweet.content;
   document.querySelector('[tweet_likes]').textContent = tweet.likesCount;

@@ -11,12 +11,23 @@ window.Loading = {
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'd-flex align-items-center';
     loadingDiv.setAttribute('data-loading-indicator', 'true');
-    loadingDiv.innerHTML = `
-      <div class="spinner-border spinner-border-sm me-2" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      ${message ? `<span>${message}</span>` : ''}
-    `;
+
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner-border spinner-border-sm me-2';
+    spinner.setAttribute('role', 'status');
+
+    const srLabel = document.createElement('span');
+    srLabel.className = 'visually-hidden';
+    srLabel.textContent = 'Loading...';
+    spinner.appendChild(srLabel);
+    loadingDiv.appendChild(spinner);
+
+    if (message) {
+      const msgSpan = document.createElement('span');
+      msgSpan.textContent = String(message);
+      loadingDiv.appendChild(msgSpan);
+    }
+
     container.appendChild(loadingDiv);
   },
 
