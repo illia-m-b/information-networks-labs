@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Clone | Vue 3 Client</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+          crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" rel="stylesheet">
+    <style>
+        .avatar-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .avatar-fallback {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+{% verbatim %}
+<div id="vue-app" class="min-vh-100">
+    <nav class="navbar navbar-expand-md border-bottom bg-body-tertiary sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/app">
+                <i class="fab fa-twitter me-2"></i>Twitter Vue 3
+            </a>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <a class="btn btn-sm btn-outline-secondary" href="/">SSR Home</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/about">About</a>
+                <a class="btn btn-sm btn-outline-secondary" href="/api/docs">API Docs</a>
+                <button type="button" class="btn btn-sm btn-outline-secondary" @click="toggleTheme">
+                    <i class="fas" :class="theme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
+                    <span class="ms-1">{{ theme === 'dark' ? 'Light' : 'Dark' }}</span>
+                </button>
+                <template v-if="currentUser">
+                    <span class="badge text-bg-secondary">{{ currentUser.email }}</span>
+                    <span v-if="currentUser.isAdmin" class="badge text-bg-warning">ROLE_ADMIN</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @click="handleLogout">Logout</button>
+                </template>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row g-4">
+            <aside class="col-12 col-lg-4">
+                <div class="card shadow-sm mb-3" v-if="!currentUser">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">{{ authMode === 'login' ? 'Sign In' : 'Create Account' }}</span>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn" :class="authMode === 'login' ? 'btn-primary' : 'btn-outline-primary'" @click="authMode = 'login'; authError = ''">Login</button>
+                            <button type="button" class="btn" :class="authMode === 'register' ? 'btn-primary' : 'btn-outline-primary'" @click="authMode = 'register'; authError = ''">Register</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div v-if="authError" class="alert alert-danger py-2 small">{{ authError }}</div>
+                        <form @submit.prevent="submitAuth">
+                            <div class="mb-2">
+                                <label class="form-label small mb-1">Email</label>
+                                <input v-model="authForm.email" type="email" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small mb-1">Password</label>
+                                <input v-model="authForm.password" type="password" class="form-control form-control-sm" required>
+                            </div>
+                            <template v-if="authMode === 'register'">
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Display Name</label>
+                                    <input v-model="authForm.name" type="text" class="form-control form-control-sm" minlength="3" maxlength="50" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Bio (optional)</label>
+                                    <input v-model="authForm.bio" type="text" class="form-control form-control-sm" maxlength="300">
+                                </div>
+                            </template>
+                            <button type="submit" class="btn btn-primary btn-sm w-100 mt-2" :disabled="authLoading">
+                                {{ authLoading ? 'Please wait...' : (authMode === 'login' ? 'Login' : 'Register & Login') }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-3" v-else>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">Compose Tweet</span>
+                        <span v-if="draftRestored" class="badge text-bg-info">Restored from localStorage</span>
+                    </div>
+                    <div class="card-body">
+                        <div v-if="composerError" class="alert alert-danger py-2 small">{{ composerError }}</div>
+                        <div v-if="composerSuccess" class="alert alert-success py-2 small">{{ composerSuccess }}</div>
+                        <div v-if="quoteNotice" class="alert alert-secondary py-2 small">{{ quoteNotice }}</div>
+                        <textarea v-model="draft" rows="4" maxlength="280" class="form-control mb-2" placeholder="What's happening? Drafts auto-save locally."></textarea>
+                        <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
+                            <span>{{ remainingChars }} chars remaining</span>
+                            <button v-if="draft" type="button" class="btn btn-link btn-sm p-0 text-decoration-none" @click="clearDraft">Clear draft</button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-grow-1" :disabled="quoteLoading" @click="inspireDraft">
+                                <i class="fas fa-wand-magic-sparkles me-1"></i>{{ quoteLoading ? 'Loading...' : 'Inspire Me' }}
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm flex-grow-1" :disabled="composerLoading || !draft.trim()" @click="publishTweet">
+                                {{ composerLoading ? 'Posting...' : 'Post Tweet' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body small text-muted">
+                        <div class="fw-semibold text-body mb-1">Local Storage &amp; API Integrations</div>
+                        <ul class="mb-0 ps-3">
+                            <li>Backend REST API: <code>/api/*</code> (JWT + auto-refresh)</li>
+                            <li>Third-party APIs: <code>dummyjson.com</code> quotes &amp; <code>api.dicebear.com</code> avatars</li>
+                            <li>Device storage: Auth tokens, tweet draft, bookmarks ({{ bookmarks.length }}), and theme (<code>{{ theme }}</code>)</li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="col-12 col-lg-8">
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'feed' }" @click="selectTab('feed')">
+                            Feed
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'bookmarks' }" @click="selectTab('bookmarks')">
+                            Bookmarks <span class="badge text-bg-secondary ms-1">{{ bookmarks.length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" v-if="currentUser || selectedProfile">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'profile' }" @click="selectTab('profile')">
+                            Profile
+                        </button>
+                    </li>
+                    <li class="nav-item" v-if="currentUser && currentUser.isAdmin">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'admin' }" @click="selectTab('admin')">
+                            Admin
+                        </button>
+                    </li>
+                </ul>
+
+                <section v-if="activeTab === 'feed'">
+                    <div class="d-flex gap-2 mb-3">
+                        <input v-model="searchQuery" type="search" class="form-control form-control-sm" placeholder="Filter loaded tweets by text or author...">
+                        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" :disabled="feedLoading" @click="loadFeed(true)">
+                            <i class="fas fa-rotate me-1"></i>Refresh
+                        </button>
+                    </div>
+
+                    <div v-if="feedError" class="alert alert-warning py-2 small">{{ feedError }}</div>
+
+                    <div v-if="feedLoading && tweets.length === 0" class="text-muted py-4 text-center">Loading tweets...</div>
+                    <div v-else-if="filteredTweets.length === 0" class="alert alert-secondary">No tweets match your view.</div>
+
+                    <div class="card mb-3 shadow-sm" v-for="tweet in filteredTweets" :key="tweet.id">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start gap-2">
+                                <img v-if="!failedAvatars[tweet.author.id]"
+                                     :src="avatarUrl(tweet.author.id)"
+                                     :alt="tweet.author.name"
+                                     class="avatar-box border"
+                                     @error="markAvatarFailed(tweet.author.id)">
+                                <span v-else class="avatar-fallback bg-primary-subtle text-primary border">{{ initials(tweet.author.name) }}</span>
+
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                        <div>
+                                            <button type="button" class="btn btn-link p-0 fw-bold text-decoration-none" @click="openProfile(tweet.author.id)">
+                                                {{ tweet.author.name }}
+                                            </button>
+                                            <span class="text-muted small ms-2">{{ formatDate(tweet.createdAt) }}</span>
+                                        </div>
+                                        <a :href="'/t/' + tweet.id" class="small text-muted text-decoration-none">Permalink</a>
+                                    </div>
+
+                                    <div v-if="editingTweetId === tweet.id" class="mt-2">
+                                        <textarea v-model="editingContent" rows="2" maxlength="280" class="form-control form-control-sm mb-2"></textarea>
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-primary btn-sm" :disabled="editSaving" @click="saveEdit(tweet)">Save</button>
+                                            <button type="button" class="btn btn-secondary btn-sm" @click="cancelEdit">Cancel</button>
+                                        </div>
+                                    </div>
+                                    <p v-else class="mt-2 mb-2">{{ tweet.content }}</p>
+
+                                    <div class="d-flex align-items-center gap-3 small">
+                                        <button type="button"
+                                                class="btn btn-sm p-0 border-0 bg-transparent"
+                                                :class="likedMap[tweet.id] ? 'text-primary fw-semibold' : 'text-muted'"
+                                                :disabled="!currentUser"
+                                                :title="currentUser ? 'Toggle like' : 'Login to like'"
+                                                @click="toggleLike(tweet)">
+                                            <i class="fa-thumbs-up me-1" :class="likedMap[tweet.id] ? 'fas' : 'far'"></i>
+                                            <span>{{ tweet.likesCount }}</span>
+                                        </button>
+
+                                        <button type="button"
+                                                class="btn btn-sm p-0 border-0 bg-transparent"
+                                                :class="isBookmarked(tweet.id) ? 'text-warning fw-semibold' : 'text-muted'"
+                                                @click="toggleBookmark(tweet)">
+                                            <i class="fa-bookmark me-1" :class="isBookmarked(tweet.id) ? 'fas' : 'far'"></i>
+                                            <span>{{ isBookmarked(tweet.id) ? 'Saved' : 'Bookmark' }}</span>
+                                        </button>
+
+                                        <button v-if="currentUser && currentUser.id === tweet.author.id && editingTweetId !== tweet.id"
+                                                type="button"
+                                                class="btn btn-sm p-0 border-0 bg-transparent text-muted"
+                                                @click="startEdit(tweet)">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </button>
+
+                                        <button v-if="currentUser && currentUser.isAdmin"
+                                                type="button"
+                                                class="btn btn-sm p-0 border-0 bg-transparent text-danger ms-auto"
+                                                @click="deleteAsAdmin(tweet)">
+                                            <i class="fas fa-trash me-1"></i>Admin Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center" v-if="hasMore">
+                        <button type="button" class="btn btn-outline-primary btn-sm" :disabled="feedLoading" @click="loadMoreTweets">
+                            {{ feedLoading ? 'Loading...' : 'Load More' }}
+                        </button>
+                    </div>
+                </section>
+
+                <section v-if="activeTab === 'bookmarks'">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted small">Persisted locally in <code>localStorage</code> (accessible offline).</span>
+                        <button v-if="bookmarks.length > 0" type="button" class="btn btn-sm btn-outline-danger" @click="clearBookmarks">Clear All</button>
+                    </div>
+                    <div v-if="bookmarks.length === 0" class="alert alert-secondary">No bookmarked tweets yet.</div>
+                    <div class="card mb-2 shadow-sm" v-for="bm in bookmarks" :key="bm.id">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong>{{ bm.author?.name || 'Unknown' }}</strong>
+                                <span class="small text-muted">{{ formatDate(bm.createdAt) }}</span>
+                            </div>
+                            <p class="mb-2">{{ bm.content }}</p>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" @click="toggleBookmark(bm)">Remove Bookmark</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section v-if="activeTab === 'profile'">
+                    <div v-if="profileLoading" class="text-muted py-4 text-center">Loading profile...</div>
+                    <div v-else-if="profileError" class="alert alert-danger">{{ profileError }}</div>
+                    <div v-else-if="selectedProfile">
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    <img v-if="!failedAvatars[selectedProfile.userId]"
+                                         :src="avatarUrl(selectedProfile.userId)"
+                                         :alt="selectedProfile.name"
+                                         class="avatar-box border"
+                                         @error="markAvatarFailed(selectedProfile.userId)">
+                                    <span v-else class="avatar-fallback bg-primary-subtle text-primary border">{{ initials(selectedProfile.name) }}</span>
+                                    <div>
+                                        <h2 class="h5 mb-0">{{ selectedProfile.name }}</h2>
+                                        <div class="small text-muted">Joined {{ formatDate(selectedProfile.createdAt) }}</div>
+                                    </div>
+                                </div>
+                                <p class="mb-0 text-muted">{{ selectedProfile.bio || 'No bio yet.' }}</p>
+
+                                <form v-if="currentUser && currentUser.id === selectedProfile.userId" class="mt-3 pt-3 border-top" @submit.prevent="saveProfile">
+                                    <div v-if="profileMessage" class="alert alert-success py-2 small">{{ profileMessage }}</div>
+                                    <div class="row g-2">
+                                        <div class="col-md-5">
+                                            <input v-model="profileEdit.name" type="text" class="form-control form-control-sm" minlength="3" maxlength="50" required placeholder="Display name">
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input v-model="profileEdit.bio" type="text" class="form-control form-control-sm" maxlength="300" placeholder="Bio">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-primary btn-sm w-100" :disabled="profileSaving">Save</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <h3 class="h6 text-muted mb-2">User Tweets</h3>
+                        <div v-if="profileTweets.length === 0" class="alert alert-secondary">No tweets posted yet.</div>
+                        <div class="card mb-2" v-for="pt in profileTweets" :key="pt.id">
+                            <div class="card-body py-2">
+                                <div class="small text-muted">{{ formatDate(pt.createdAt) }}</div>
+                                <div>{{ pt.content }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section v-if="activeTab === 'admin' && currentUser && currentUser.isAdmin">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0">Platform Statistics</h2>
+                        <button type="button" class="btn btn-sm btn-outline-primary" :disabled="adminLoading" @click="loadAdminStats">Refresh Stats</button>
+                    </div>
+                    <div v-if="adminError" class="alert alert-danger small">{{ adminError }}</div>
+                    <div class="row g-3 mb-3" v-if="adminStats">
+                        <div class="col-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="small text-muted">Users</div>
+                                    <div class="h4 mb-0">{{ adminStats.usersCount }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="small text-muted">Tweets</div>
+                                    <div class="h4 mb-0">{{ adminStats.tweetsCount }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <div class="small text-muted">Likes</div>
+                                    <div class="h4 mb-0">{{ adminStats.likesCount }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0">Use the <strong>Admin Delete</strong> action on any tweet in the Feed tab for content moderation.</p>
+                </section>
+            </main>
+        </div>
+    </div>
+</div>
+{% endverbatim %}
+<script type="module" src="{{ asset('vue/main.js') }}"></script>
+</body>
+</html>

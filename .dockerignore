@@ -22,12 +22,15 @@
 **/Dockerfile
 **/Thumbs.db
 .github/
-docs/
+docs/*
+!docs/rest.yaml
 public/bundles/
 tests/
 var/
 vendor/
 .editorconfig
+config/jwt/*.pem
+.env.deploy
 .env.*.local
 .env.local
 .env.local.php

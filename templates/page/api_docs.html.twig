@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Clone | API Documentation</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui.css">
+    <style>
+        body { margin: 0; background: #fafafa; font-family: system-ui, -apple-system, sans-serif; }
+        .topbar-nav { display: flex; gap: 1rem; align-items: center; padding: 0.75rem 1.5rem; background: #1f2937; color: #fff; }
+        .topbar-nav a { color: #93c5fd; text-decoration: none; font-size: 0.9rem; }
+        .topbar-nav a:hover { text-decoration: underline; }
+        .topbar-title { font-weight: 600; margin-right: auto; }
+    </style>
+</head>
+<body>
+    <header class="topbar-nav">
+        <span class="topbar-title">Twitter Clone — REST API</span>
+        <a href="{{ path('homepage') }}">SSR Home</a>
+        <a href="{{ path('vue_app') }}">Vue 3 Client</a>
+        <a href="{{ path('api_openapi_spec') }}">OpenAPI YAML</a>
+    </header>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-bundle.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            window.ui = SwaggerUIBundle({
+                url: '{{ path('api_openapi_spec') }}',
+                dom_id: '#swagger-ui',
+                presets: [SwaggerUIBundle.presets.apis]
+            });
+        });
+    </script>
+</body>
+</html>

@@ -36,6 +36,8 @@ security:
     access_control:
         - { path: ^/api/token, roles: PUBLIC_ACCESS }
         - { path: ^/api/health, roles: PUBLIC_ACCESS }
+        - { path: ^/api/openapi\.yaml$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/docs$, roles: PUBLIC_ACCESS }
         - { path: ^/api/users, roles: PUBLIC_ACCESS }
         - { path: ^/api/registration, roles: PUBLIC_ACCESS }
         - { path: ^/api/profiles, methods: [GET], roles: PUBLIC_ACCESS }

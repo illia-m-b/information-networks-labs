@@ -63,3 +63,11 @@ when@test:
                 async: 'in-memory://'
                 async_emails: 'in-memory://'
                 failed: 'in-memory://'
+
+when@prod:
+    framework:
+        messenger:
+            transports:
+                async: 'sync://'
+                async_emails: 'sync://'
+                failed: 'sync://'
