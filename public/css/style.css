@@ -1,0 +1,91 @@
+span.fw-bold.me-2 > a {
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+
+.tweets-sentinel {
+    height: 1px;
+}
+
+.tweet-like-tooltip-wrapper.is-guest-disabled {
+    cursor: not-allowed;
+}
+
+.tweet-like-tooltip-wrapper.is-guest-disabled .tweet-like-icon {
+    opacity: 0.5;
+}
+
+.tweet-like-tooltip-wrapper.is-guest-disabled .tweet-like-count {
+    opacity: 1;
+}
+
+.tweet-like-tooltip-wrapper.is-guest-disabled .tweet-like-btn:disabled {
+    cursor: not-allowed;
+}
+
+.logolink {text-decoration: unset;}
+
+#edit-profile-btn {
+    display: contents;
+}
+#edit-profile-btn:hover {color: var(--bs-body-color); }
+
+
+
+.auth-guest-only,
+.auth-user-only {
+    display: none !important;
+}
+
+body.is-authenticated .auth-user-only {
+    display: block !important;
+}
+
+body.is-guest .auth-guest-only {
+    display: block !important;
+}
+.icon-sup {
+    vertical-align: middle;      /* prevents weird baseline shift */
+    position: relative;
+}
+
+.icon-stack {
+    position: relative;
+    display: inline-block;
+    line-height: 1;
+}
+
+.base {
+    font-size: 20px;
+    color: gold;
+}
+
+.overlay {
+    position: absolute;
+    bottom: 5px;
+    right: 6px;
+    font-size: 10px;
+    color: white;
+
+}
+
+.auth-guest-only,
+.auth-user-only {
+    display: none !important;
+}
+
+body.is-authenticated .auth-user-only {
+    display: block !important;
+}
+
+body.is-guest .auth-guest-only {
+    display: block !important;
+}
+
+.auth-admin-only {
+    display: none !important;
+}
+
+body.is-admin .auth-admin-only {
+    display: block !important;
+}

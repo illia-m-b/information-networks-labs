@@ -1,0 +1,29 @@
+{% extends 'layout/base.html.twig' %}
+
+{% block title %}About | Twitter{% endblock %}
+
+{% block content %}
+    <article class="card shadow-sm">
+        <div class="card-body p-4">
+            <h1 class="h3 mb-3">About Twitter Clone</h1>
+            <p class="text-muted">
+                This application is a modular microblogging platform built for the Information Networks university laboratory assignments.
+            </p>
+
+            <h2 class="h5 mt-4">Architecture &amp; Stack</h2>
+            <ul>
+                <li><strong>Backend:</strong> Symfony 7.4 modular monolith on PHP 8.4 with FrankenPHP worker mode</li>
+                <li><strong>Database:</strong> MySQL 8.4 using time-ordered UUID v7 primary keys stored as <code>BINARY(16)</code></li>
+                <li><strong>Caching &amp; Protection:</strong> Redis tag-aware feed/profile caching, distributed like locks, and API rate limiting</li>
+                <li><strong>Security:</strong> Stateless RSA JWT authentication with refresh tokens and role-based access control</li>
+            </ul>
+
+            <h2 class="h5 mt-4">Core Features</h2>
+            <ul class="mb-0">
+                <li>User registration, authentication, and customizable public profiles</li>
+                <li>Global and per-user tweet feeds with optimistic like toggling</li>
+                <li>Role-based administrator moderation tools for content oversight</li>
+            </ul>
+        </div>
+    </article>
+{% endblock %}
