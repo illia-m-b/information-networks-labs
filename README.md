@@ -1,6 +1,6 @@
-# Twitter | EPAM Campus
+# Twitter
 
-This project is a Twitter-like application developed for EPAM Campus.
+This project is a Twitter-like application.
 
 All detailed documentation → [/docs](docs)
 
@@ -48,4 +48,4 @@ Open  https://localhost
 
 ## License
 
-Twitter is available under the MIT license. See [LICENSE](LICENSE) for more info.
+This project is available under the MIT license. See [LICENSE](LICENSE) for more info.
