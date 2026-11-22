@@ -104,7 +104,7 @@ services:
         anonymous
         cors_origins *
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost/healthz" ]
+      test: [ "CMD", "curl", "-f", "http://localhost/" ]
       timeout: 5s
       retries: 5
       start_period: 60s
